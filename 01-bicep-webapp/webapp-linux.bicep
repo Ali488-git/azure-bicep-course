@@ -1,16 +1,17 @@
-param webAppName string = uniqueString(resourceGroup().id) // Generate unique String for web app name
-param sku string = 'B1' // The SKU of App Service Plan
-param linuxFxVersion string = 'php|7.4' // The runtime stack of web app
-param location string = resourceGroup().location // Location for all resources
+param webAppName string
+param sku string = 'B1'
+param linuxFxVersion string = 'PHP|8.1'
+param location string = resourceGroup().location
 
-var appServicePlanName = toLower('AppServicePlan-${webAppName}')
-var webSiteName = toLower('wapp-${webAppName}')
+var appServicePlanName = toLower('asp-${webAppName}')
+var webSiteName = toLower(webAppName)
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
   name: appServicePlanName
   location: location
   sku: {
     name: sku
+    tier: 'Basic'
   }
   kind: 'linux'
   properties: {
@@ -21,11 +22,12 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
 resource appService 'Microsoft.Web/sites@2020-06-01' = {
   name: webSiteName
   location: location
-  kind: 'app'
+  kind: 'app,linux'
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
       linuxFxVersion: linuxFxVersion
     }
+    httpsOnly: true
   }
 }
