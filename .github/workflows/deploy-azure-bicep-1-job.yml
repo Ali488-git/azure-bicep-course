@@ -12,14 +12,19 @@ env:
 jobs:
   preview-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4   # updated
+      - uses: actions/checkout@v4
 
-      - name: Login to Azure
-        uses: azure/login@v1        # updated (from Azure/login@v1.4.3)
+      - name: Login to Azure (OIDC)
+        uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
       - name: Create Azure Resource Group
         uses: azure/cli@v2          # updated
@@ -37,10 +42,10 @@ jobs:
           additionalParameters: webAppName=$WEBAPP_NAME
 
       - name: Deploy Bicep to Azure
-      uses: azure/cli@v2
-      with:
-        inlineScript: |
-          az deployment group what-if \
-            --resource-group $RESOURCE_GROUP \
-            --template-file 01-bicep-webapp/webapp-linux.bicep \
-            --parameters webAppName=$WEBAPP_NAME
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az deployment group what-if \
+              --resource-group $RESOURCE_GROUP \
+              --template-file 01-bicep-webapp/webapp-linux.bicep \
+              --parameters webAppName=$WEBAPP_NAME
