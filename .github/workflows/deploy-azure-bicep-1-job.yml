@@ -37,9 +37,10 @@ jobs:
           additionalParameters: webAppName=$WEBAPP_NAME
 
       - name: Deploy Bicep to Azure
-        uses: azure/arm-deploy@v1   # already latest stable
-        with:
-          subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}
-          resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: 01-bicep-webapp/webapp-linux.bicep
-          parameters: webApp
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          az deployment group what-if \
+            --resource-group $RESOURCE_GROUP \
+            --template-file 01-bicep-webapp/webapp-linux.bicep \
+            --parameters webAppName=$WEBAPP_NAME
