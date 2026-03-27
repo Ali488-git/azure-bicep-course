@@ -27,16 +27,17 @@ jobs:
         with:
           inlineScript: |
             az group create -n $RESOURCE_GROUP -l westeurope
-
+            
       - name: Preview Changes from Bicep
-        uses: azure/arm-deploy@v1   # replaced deprecated what-if action
+        uses: azure/cli@v2
         with:
-          subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}
-          resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: 01-bicep-webapp/webapp-linux.bicep
-          parameters: webAppName=${{ env.WEBAPP_NAME }}
-          deploymentMode: Incremental
-          what-if: true             # preview mode
+          inlineScript: |
+            az deployment group what-if \
+              --resource-group $RESOURCE_GROUP \
+              --template-file 01-bicep-webapp/webapp-linux.bicep \
+              --parameters webAppName=$WEBAPP_NAME
+    
+          
 
       - name: Deploy Bicep to Azure
         if: github.event_name == 'workflow_dispatch'   # prevent deploy on PR
