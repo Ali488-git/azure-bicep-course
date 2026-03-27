@@ -2,8 +2,7 @@ name: Deploy-Azure-Bicep-1-job
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 env:
@@ -18,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4   # updated
 
       - name: Login to Azure
-        uses: azure/login@v1        # fixed casing + version
+        uses: azure/login@v1        # updated (from Azure/login@v1.4.3)
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -26,25 +25,21 @@ jobs:
         uses: azure/cli@v2          # updated
         with:
           inlineScript: |
+            az version
             az group create -n $RESOURCE_GROUP -l westeurope
-            
-      - name: Preview Changes from Bicep
-        uses: azure/cli@v2
+
+      - name: Preview Changes fron Bicep
+        uses: azure/deployment-what-if-action@v1   # updated (from @v1.0.0)
         with:
-          inlineScript: |
-            az deployment group what-if \
-              --resource-group $RESOURCE_GROUP \
-              --template-file 01-bicep-webapp/webapp-linux.bicep \
-              --parameters webAppName=$WEBAPP_NAME
-    
-          
+          subscription: ${{ secrets.SUBSCRIPTION_ID }}
+          resourceGroup: $RESOURCE_GROUP
+          templateFile: 01-bicep-webapp/webapp-linux.bicep
+          additionalParameters: webAppName=$WEBAPP_NAME
 
       - name: Deploy Bicep to Azure
-        if: github.event_name == 'workflow_dispatch'   # prevent deploy on PR
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@v1   # already latest stable
         with:
           subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: 01-bicep-webapp/webapp-linux.bicep
-          parameters: webAppName=${{ env.WEBAPP_NAME }}
-          failOnStdErr: false
+          parameters: webApp
